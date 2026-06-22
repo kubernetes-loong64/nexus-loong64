@@ -30,7 +30,7 @@ index 588e1c6..a836466 100644
  # Remove CUPS, ignore the fact openjdk depends on it
  # Remove expat, nss-> crypto-policies-scripts -> python3 -> expat
 -RUN microdnf remove -y gzip shadow-utils \
-+RUN rpm --erase --nodeps gzip shadow-utils \
++RUN rpm --erase --nodeps gzip \
     && rpm --erase --nodeps cups-libs \
     && rpm --erase --nodeps expat
 
