@@ -77,6 +77,17 @@ jobs:
           echo "UPSTREAM_NEXUS_VERSION=$UPSTREAM_NEXUS_VERSION"
           echo "UPSTREAM_NEXUS_VERSION=$UPSTREAM_NEXUS_VERSION" >> ${GITHUB_ENV}
           echo "UPSTREAM_NEXUS_VERSION=$UPSTREAM_NEXUS_VERSION" >> ${GITHUB_OUTPUT}
+      - name: Validate Nexus version
+        run: |
+          case "${{ env.UPSTREAM_NEXUS_VERSION }}" in
+            "${{ env.NEXUS_VERSION }}"*)
+              echo "✅ NEXUS_VERSION (${{ env.NEXUS_VERSION }}) is a prefix of UPSTREAM_NEXUS_VERSION (${{ env.UPSTREAM_NEXUS_VERSION }})"
+              ;;
+            *)
+              echo "❌ NEXUS_VERSION (${{ env.NEXUS_VERSION }}) is NOT a prefix of UPSTREAM_NEXUS_VERSION (${{ env.UPSTREAM_NEXUS_VERSION }})"
+              exit 1
+              ;;
+          esac
       - name: Install Docker CLI
         run: |
           apt remove $(dpkg --get-selections docker.io docker-compose docker-doc podman-docker containerd runc | cut -f1)
