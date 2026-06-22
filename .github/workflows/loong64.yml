@@ -67,6 +67,16 @@ jobs:
       - name: Clone docker-nexus3
         run: |
           git clone --depth 1 https://github.com/sonatype/docker-nexus3.git docker-nexus3
+      - name: Apply patches
+        working-directory: docker-nexus3
+        run: git apply ../*.patch
+      - name: Extract upstream Nexus version
+        working-directory: docker-nexus3
+        run: |
+          UPSTREAM_NEXUS_VERSION=$(grep 'ARG NEXUS_VERSION=' Dockerfile.java21 | head -1 | cut -d= -f2 | tr -d ' ')
+          echo "UPSTREAM_NEXUS_VERSION=$UPSTREAM_NEXUS_VERSION"
+          echo "UPSTREAM_NEXUS_VERSION=$UPSTREAM_NEXUS_VERSION" >> ${GITHUB_ENV}
+          echo "UPSTREAM_NEXUS_VERSION=$UPSTREAM_NEXUS_VERSION" >> ${GITHUB_OUTPUT}
       - name: Install Docker CLI
         run: |
           apt remove $(dpkg --get-selections docker.io docker-compose docker-doc podman-docker containerd runc | cut -f1)
@@ -91,16 +101,6 @@ jobs:
           ls -la /run/docker.sock 2>/dev/null || echo "/run/docker.sock not found"
           echo "DOCKER_HOST=$DOCKER_HOST"
           docker info
-      - name: Apply patches
-        working-directory: docker-nexus3
-        run: git apply ../*.patch
-      - name: Extract upstream Nexus version
-        working-directory: docker-nexus3
-        run: |
-          UPSTREAM_NEXUS_VERSION=$(grep 'ARG NEXUS_VERSION=' Dockerfile.java21 | head -1 | cut -d= -f2 | tr -d ' ')
-          echo "UPSTREAM_NEXUS_VERSION=$UPSTREAM_NEXUS_VERSION"
-          echo "UPSTREAM_NEXUS_VERSION=$UPSTREAM_NEXUS_VERSION" >> ${GITHUB_ENV}
-          echo "UPSTREAM_NEXUS_VERSION=$UPSTREAM_NEXUS_VERSION" >> ${GITHUB_OUTPUT}
       - name: Set up QEMU
         uses: docker/setup-qemu-action@06116385d9baf250c9f4dcb4858b16962ea869c3 # v4.1.0
       - name: Set up Docker Buildx
