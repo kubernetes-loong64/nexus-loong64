@@ -1,22 +1,42 @@
+# Nexus for LoongArch64
+
 <p align="center"><a href="README.md">English</a> | <a href="README-zh.md">中文</a></p>
 
-## 验证发布
+<p align="center"><img src="https://img.shields.io/badge/Nexus%20LoongArch64%20%E9%BE%99%E8%8A%AF%E6%9E%B6%E6%9E%84%E5%8F%91%E8%A1%8C%E7%89%88-blue?logo=sonatype&logoColor=white" alt="Nexus LoongArch64 龙芯架构发行版"></p>
 
-- 发布文件使用 GPG 签名。
-- 从 [keys.openpgp.org](https://keys.openpgp.org) 下载公钥。
-- 指纹：[FCF8724722CCBF9F51B1FBE376532BE7E3013105](https://keys.openpgp.org/debug?q=FCF8724722CCBF9F51B1FBE376532BE7E3013105)
-- [手动下载](https://keys.openpgp.org/vks/v1/by-fingerprint/FCF8724722CCBF9F51B1FBE376532BE7E3013105)
+为 **LoongArch64 (loong64)** 架构预构建的 [Sonatype Nexus Repository Manager](https://www.sonatype.com/products/sonatype-nexus-repository) Docker 镜像。
 
-```shell
-gpg --keyserver keys.openpgp.org --recv-keys FCF8724722CCBF9F51B1FBE376532BE7E3013105
-echo "FCF8724722CCBF9F51B1FBE376532BE7E3013105:6:" | gpg --import-ownertrust
-```
+## Docker 镜像
 
-或者，手动下载公钥文件后导入：
+镜像发布在 Docker Hub 上 [`kubernetesloong64/nexus3-loong64`](https://hub.docker.com/r/kubernetesloong64/nexus3-loong64)。
+
+- [![kubernetesloong64/nexus3-loong64](https://img.shields.io/docker/v/kubernetesloong64/nexus3-loong64?arch=loong64&logo=docker&label=kubernetesloong64%2Fnexus3-loong64&sort=semver)](https://hub.docker.com/r/kubernetesloong64/nexus3-loong64/tags)
+
+### 拉取镜像
 
 ```shell
-gpg --import /tmp/xxx
+docker pull kubernetesloong64/nexus3-loong64:3.93.1
+docker pull kubernetesloong64/nexus3-loong64:3.93.0
 ```
+
+### 使用
+
+```shell
+docker run -d --name nexus \
+  -p 8081:8081 \
+  -v nexus-data:/nexus-data \
+  kubernetesloong64/nexus3-loong64:3.93.1
+```
+
+启动后，获取初始管理员密码：
+
+```shell
+docker exec nexus cat /nexus-data/admin.password
+```
+
+## 分支命名
+
+推送 `loong64-<nexus 版本>` 格式的分支（如 `loong64-3.93.1`）即可触发构建。
 
 ## 许可证
 
