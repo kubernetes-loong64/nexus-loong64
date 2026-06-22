@@ -18,6 +18,8 @@ jobs:
     container: debian:13
     permissions:
       contents: read
+    env:
+      DOCKER_NEXUS3_REF: 115c82fc
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -66,7 +68,9 @@ jobs:
           apt install -y git
       - name: Clone docker-nexus3
         run: |
-          git clone --depth 1 https://github.com/sonatype/docker-nexus3.git docker-nexus3
+          git clone https://github.com/sonatype/docker-nexus3.git docker-nexus3
+          cd docker-nexus3
+          git checkout ${{ env.DOCKER_NEXUS3_REF }}
       - name: Apply patches
         working-directory: docker-nexus3
         run: git apply ../*.patch
