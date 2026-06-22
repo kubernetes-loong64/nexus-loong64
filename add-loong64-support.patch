@@ -1,0 +1,36 @@
+diff --git a/Dockerfile.java21 b/Dockerfile.java21
+index 588e1c6..a836466 100644
+--- a/Dockerfile.java21
++++ b/Dockerfile.java21
+@@ -12,7 +12,7 @@
+ # See the License for the specific language governing permissions and
+ # limitations under the License.
+
+-FROM redhat/ubi9-minimal
++FROM openanolis/anolisos:23.4
+
+ LABEL name="Nexus Repository Manager" \
+       maintainer="Sonatype <support@sonatype.com>" \
+@@ -49,10 +49,10 @@ ENV NEXUS_HOME=${SONATYPE_DIR}/nexus \
+     DOCKER_TYPE='rh-docker'
+
+ # Install Java, tar, and unzip
+-RUN microdnf update -y \
+-    && microdnf --setopt=install_weak_deps=0 --setopt=tsflags=nodocs install -y \
++RUN dnf update -y \
++    && dnf --setopt=install_weak_deps=0 --setopt=tsflags=nodocs install -y \
+           java-21-openjdk-headless tar procps shadow-utils gzip unzip glibc-langpack-en \
+-    && microdnf clean all \
++    && dnf clean all \
+     && groupadd --gid 200 -r nexus \
+     && useradd --uid 200 -r nexus -g nexus -s /bin/false -d /opt/sonatype/nexus -c 'Nexus Repository Manager user'
+
+@@ -82,7 +82,7 @@ RUN echo "#!/bin/bash" >> ${SONATYPE_DIR}/start-nexus-repository-manager.sh \
+ # Remove dependencies added for extracting Nexus
+ # Remove CUPS, ignore the fact openjdk depends on it
+ # Remove expat, nss-> crypto-policies-scripts -> python3 -> expat
+-RUN microdnf remove -y gzip shadow-utils \
++RUN rpm --erase --nodeps gzip shadow-utils \
+    && rpm --erase --nodeps cups-libs \
+    && rpm --erase --nodeps expat
+

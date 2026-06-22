@@ -1,0 +1,152 @@
+name: loong64
+on:
+  push:
+    branches:
+      - loong64-*
+    tags:
+      - release-loong64-*
+  pull_request:
+    branches:
+      - loong64-*
+
+env:
+  KUBE_BASE_IMAGE_REGISTRY: ${{ vars.KUBE_BASE_IMAGE_REGISTRY || 'kubernetesloong64' }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: debian:13
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Print branch name
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "${{ github.base_ref }} (PR target)"
+          else
+            echo ${{ github.ref_name }}
+          fi
+      - name: Extract Nexus version
+        id: extract
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            REF=${{ github.base_ref }}
+          else
+            REF=${{ github.ref_name }}
+          fi
+          echo "REF=$REF"
+          RAW_VERSION=$(echo $REF | awk -F'loong64-' '{print $2}')
+          echo "RAW_VERSION=$RAW_VERSION"
+          echo "RAW_VERSION=$RAW_VERSION" >> ${GITHUB_OUTPUT}
+          NEXUS_VERSION=$(echo $RAW_VERSION | awk -F'+' '{print $1}')
+          echo "NEXUS_VERSION=$NEXUS_VERSION"
+          echo "NEXUS_VERSION=$NEXUS_VERSION" >> ${GITHUB_ENV}
+          echo "NEXUS_VERSION=$NEXUS_VERSION" >> ${GITHUB_OUTPUT}
+          DOCKER_TAG=$(echo $RAW_VERSION | sed 's/+/-/g')
+          echo "DOCKER_TAG=$DOCKER_TAG"
+          echo "DOCKER_TAG=$DOCKER_TAG" >> ${GITHUB_ENV}
+          echo "DOCKER_TAG=$DOCKER_TAG" >> ${GITHUB_OUTPUT}
+          SERIAL=$(echo $RAW_VERSION | awk -F'+' '{print $2}')
+          SERIAL=${SERIAL:-alpha.${{ github.run_number }}}
+          echo "SERIAL=$SERIAL"
+          echo "SERIAL=$SERIAL" >> ${GITHUB_ENV}
+          echo "SERIAL=$SERIAL" >> ${GITHUB_OUTPUT}
+          if echo "$RAW_VERSION" | grep -qE '[+].*(alpha|beta|rc)'; then
+            IS_STABLE=false
+          else
+            IS_STABLE=true
+          fi
+          echo "IS_STABLE=$IS_STABLE"
+          echo "IS_STABLE=$IS_STABLE" >> ${GITHUB_OUTPUT}
+      - name: Install build tools
+        run: |
+          apt update
+          apt install -y git
+      - name: Clone docker-nexus3
+        run: |
+          git clone --depth 1 https://github.com/sonatype/docker-nexus3.git docker-nexus3
+      - name: Install Docker CLI
+        run: |
+          apt remove $(dpkg --get-selections docker.io docker-compose docker-doc podman-docker containerd runc | cut -f1)
+          apt update
+          apt install -y ca-certificates curl
+          install -m 0755 -d /etc/apt/keyrings
+          curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
+          chmod a+r /etc/apt/keyrings/docker.asc
+          # Add the repository to Apt sources:
+          tee /etc/apt/sources.list.d/docker.sources <<EOF
+          Types: deb
+          URIs: https://download.docker.com/linux/debian
+          Suites: $(. /etc/os-release && echo "$VERSION_CODENAME")
+          Components: stable
+          Architectures: $(dpkg --print-architecture)
+          Signed-By: /etc/apt/keyrings/docker.asc
+          EOF
+          apt update
+          apt install -y docker-ce-cli
+      - name: Verify Docker installation
+        run: |
+          ls -la /run/docker.sock 2>/dev/null || echo "/run/docker.sock not found"
+          echo "DOCKER_HOST=$DOCKER_HOST"
+          docker info
+      - name: Apply patches
+        working-directory: docker-nexus3
+        run: git apply ../*.patch
+      - name: Extract upstream Nexus version
+        working-directory: docker-nexus3
+        run: |
+          UPSTREAM_NEXUS_VERSION=$(grep 'ARG NEXUS_VERSION=' Dockerfile.java21 | head -1 | cut -d= -f2 | tr -d ' ')
+          echo "UPSTREAM_NEXUS_VERSION=$UPSTREAM_NEXUS_VERSION"
+          echo "UPSTREAM_NEXUS_VERSION=$UPSTREAM_NEXUS_VERSION" >> ${GITHUB_ENV}
+          echo "UPSTREAM_NEXUS_VERSION=$UPSTREAM_NEXUS_VERSION" >> ${GITHUB_OUTPUT}
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@06116385d9baf250c9f4dcb4858b16962ea869c3 # v4.1.0
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4.1.0
+      - name: Login to Docker
+        uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee # v4.2.0
+        if: github.event_name == 'push'
+        with:
+          username: ${{ vars.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Build Nexus image
+        id: build-nexus
+        working-directory: docker-nexus3
+        run: |
+          IMAGE_NAME=${{ env.KUBE_BASE_IMAGE_REGISTRY }}/nexus3-loong64
+          is_push=${{ github.event_name == 'push' && '--push' || '--load' }}
+          echo "=== Before Docker build ==="
+          docker images --format "table {{.Repository}}\t{{.Tag}}\t{{.ID}}\t{{.CreatedSince}}\t{{.Size}}" | (read -r header; echo "$header"; tail -n +2 | sort -k1,1 -k2,2)
+          echo "=== Starting Docker build ==="
+          echo "Building ${IMAGE_NAME}:${{ env.DOCKER_TAG }}"
+          docker buildx build \
+            $is_push \
+            -f Dockerfile.java21 \
+            --build-arg NEXUS_VERSION=${{ env.UPSTREAM_NEXUS_VERSION }} \
+            -t ${IMAGE_NAME}:${{ env.DOCKER_TAG }} \
+            .
+          echo "=== After build ==="
+          docker images --format "table {{.Repository}}\t{{.Tag}}\t{{.ID}}\t{{.CreatedSince}}\t{{.Size}}" | (read -r header; echo "$header"; tail -n +2 | sort -k1,1 -k2,2)
+          IMAGE_REF=$(docker images ${IMAGE_NAME} --format "{{.Repository}}:{{.Tag}}" | head -1)
+          echo "IMAGE_REF=$IMAGE_REF"
+          echo "IMAGE_REF=$IMAGE_REF" >> $GITHUB_OUTPUT
+          echo "=== Saving $IMAGE_REF ==="
+          docker save -o nexus-loong64.tar $IMAGE_REF
+          echo "=== Image tarball ==="
+          ls -lha nexus-loong64.tar
+          echo "=== Manifest ==="
+          echo "--- repositories ---"
+          tar -xOf nexus-loong64.tar repositories
+          echo "--- manifest.json ---"
+          tar -xOf nexus-loong64.tar manifest.json | jq
+          echo "--- config ---"
+          tar -xOf nexus-loong64.tar $(tar -xOf nexus-loong64.tar manifest.json | jq -r '.[0].Config') | jq
+          echo "--- os, architecture ---"
+          tar -xOf nexus-loong64.tar $(tar -xOf nexus-loong64.tar manifest.json | jq -r '.[0].Config') | jq '{os, architecture}'
+      - name: Upload Nexus image
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: nexus-loong64
+          path: docker-nexus3/nexus-loong64.tar
