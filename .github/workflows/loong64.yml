@@ -122,6 +122,7 @@ jobs:
           echo "=== Starting Docker build ==="
           echo "Building ${IMAGE_NAME}:${{ env.DOCKER_TAG }}"
           docker buildx build \
+            --platform linux/loong64 \
             $is_push \
             -f Dockerfile.java21 \
             --build-arg NEXUS_VERSION=${{ env.UPSTREAM_NEXUS_VERSION }} \
