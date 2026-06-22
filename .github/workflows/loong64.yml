@@ -117,8 +117,6 @@ jobs:
         run: |
           IMAGE_NAME=${{ env.KUBE_BASE_IMAGE_REGISTRY }}/nexus3-loong64
           is_push=${{ github.event_name == 'push' && '--push' || '--load' }}
-          echo "=== Before Docker build ==="
-          docker images --format "table {{.Repository}}\t{{.Tag}}\t{{.ID}}\t{{.CreatedSince}}\t{{.Size}}" | (read -r header; echo "$header"; tail -n +2 | sort -k1,1 -k2,2)
           echo "=== Starting Docker build ==="
           echo "Building ${IMAGE_NAME}:${{ env.DOCKER_TAG }}"
           docker buildx build \
@@ -129,25 +127,3 @@ jobs:
             -t ${IMAGE_NAME}:${{ env.DOCKER_TAG }} \
             .
           echo "=== After build ==="
-          docker images --format "table {{.Repository}}\t{{.Tag}}\t{{.ID}}\t{{.CreatedSince}}\t{{.Size}}" | (read -r header; echo "$header"; tail -n +2 | sort -k1,1 -k2,2)
-          IMAGE_REF=$(docker images ${IMAGE_NAME} --format "{{.Repository}}:{{.Tag}}" | head -1)
-          echo "IMAGE_REF=$IMAGE_REF"
-          echo "IMAGE_REF=$IMAGE_REF" >> $GITHUB_OUTPUT
-          echo "=== Saving $IMAGE_REF ==="
-          docker save -o nexus-loong64.tar $IMAGE_REF
-          echo "=== Image tarball ==="
-          ls -lha nexus-loong64.tar
-          echo "=== Manifest ==="
-          echo "--- repositories ---"
-          tar -xOf nexus-loong64.tar repositories
-          echo "--- manifest.json ---"
-          tar -xOf nexus-loong64.tar manifest.json | jq
-          echo "--- config ---"
-          tar -xOf nexus-loong64.tar $(tar -xOf nexus-loong64.tar manifest.json | jq -r '.[0].Config') | jq
-          echo "--- os, architecture ---"
-          tar -xOf nexus-loong64.tar $(tar -xOf nexus-loong64.tar manifest.json | jq -r '.[0].Config') | jq '{os, architecture}'
-      - name: Upload Nexus image
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: nexus-loong64
-          path: docker-nexus3/nexus-loong64.tar
