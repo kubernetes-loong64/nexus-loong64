@@ -15,7 +15,7 @@
 ### 拉取镜像
 
 ```shell
-docker pull kubernetesloong64/nexus3-loong64:3.93.1
+docker pull kubernetesloong64/nexus3-loong64:3.93.2
 docker pull kubernetesloong64/nexus3-loong64:3.93.0
 ```
 
@@ -25,7 +25,7 @@ docker pull kubernetesloong64/nexus3-loong64:3.93.0
 docker run -d --name nexus \
   -p 8081:8081 \
   -v nexus-data:/nexus-data \
-  kubernetesloong64/nexus3-loong64:3.93.1
+  kubernetesloong64/nexus3-loong64:3.93.2
 ```
 
 启动后，获取初始管理员密码：
@@ -36,7 +36,7 @@ docker exec nexus cat /nexus-data/admin.password
 
 ## 分支命名
 
-推送 `loong64-<nexus 版本>` 格式的分支（如 `loong64-3.93.1`）即可触发构建。
+推送 `loong64-<nexus 版本>` 格式的分支（如 `loong64-3.93.2`）即可触发构建。
 
 ## 许可证
 
