@@ -16,7 +16,6 @@
 
 ```shell
 docker pull kubernetesloong64/nexus3-loong64:3.94.0
-docker pull kubernetesloong64/nexus3-loong64:3.93.0
 ```
 
 ### 使用
