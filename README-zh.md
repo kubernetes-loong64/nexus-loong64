@@ -35,7 +35,7 @@ docker exec nexus cat /nexus-data/admin.password
 
 ## 分支命名
 
-推送 `loong64-<nexus 版本>` 格式的分支（如 `loong64-3.94.1`）即可触发构建。
+推送 `loong64-<nexus 版本>` 格式的分支（如 `loong64-3.95.0`）即可触发构建。
 
 ## 许可证
 

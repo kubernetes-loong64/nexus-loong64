@@ -35,7 +35,7 @@ docker exec nexus cat /nexus-data/admin.password
 
 ## Branch Naming
 
-Push a branch named `loong64-<nexus-version>` (e.g. `loong64-3.94.1`) to trigger a build.
+Push a branch named `loong64-<nexus-version>` (e.g. `loong64-3.95.0`) to trigger a build.
 
 ## License
 
