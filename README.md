@@ -15,7 +15,7 @@ Images are published to Docker Hub under [`kubernetesloong64/nexus3-loong64`](ht
 ### Pull Images
 
 ```shell
-docker pull kubernetesloong64/nexus3-loong64:3.94.1
+docker pull kubernetesloong64/nexus3-loong64:3.95.0
 ```
 
 ### Usage
@@ -24,7 +24,7 @@ docker pull kubernetesloong64/nexus3-loong64:3.94.1
 docker run -d --name nexus \
   -p 8081:8081 \
   -v nexus-data:/nexus-data \
-  kubernetesloong64/nexus3-loong64:3.94.1
+  kubernetesloong64/nexus3-loong64:3.95.0
 ```
 
 After starting, get the initial admin password:

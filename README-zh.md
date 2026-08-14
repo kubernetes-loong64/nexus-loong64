@@ -15,7 +15,7 @@
 ### 拉取镜像
 
 ```shell
-docker pull kubernetesloong64/nexus3-loong64:3.94.1
+docker pull kubernetesloong64/nexus3-loong64:3.95.0
 ```
 
 ### 使用
@@ -24,7 +24,7 @@ docker pull kubernetesloong64/nexus3-loong64:3.94.1
 docker run -d --name nexus \
   -p 8081:8081 \
   -v nexus-data:/nexus-data \
-  kubernetesloong64/nexus3-loong64:3.94.1
+  kubernetesloong64/nexus3-loong64:3.95.0
 ```
 
 启动后，获取初始管理员密码：
