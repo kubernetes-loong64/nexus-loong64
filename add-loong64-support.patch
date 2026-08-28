@@ -1,5 +1,5 @@
 diff --git a/Dockerfile.java21 b/Dockerfile.java21
-index 8ad831b..0d65eae 100644
+index 1a7cd27..f341905 100644
 --- a/Dockerfile.java21
 +++ b/Dockerfile.java21
 @@ -15,7 +15,7 @@
@@ -27,14 +27,17 @@ index 8ad831b..0d65eae 100644
      && groupadd --gid 200 -r nexus \
      && useradd --uid 200 -r nexus -g nexus -s /bin/false -d /opt/sonatype/nexus -c 'Nexus Repository Manager user'
  
-@@ -86,8 +85,8 @@ RUN echo "#!/bin/bash" >> ${SONATYPE_DIR}/start-nexus-repository-manager.sh \
+@@ -86,10 +85,9 @@ RUN echo "#!/bin/bash" >> ${SONATYPE_DIR}/start-nexus-repository-manager.sh \
  # Remove dependencies added for extracting Nexus
  # Remove CUPS, ignore the fact openjdk depends on it
  # Remove expat, nss-> crypto-policies-scripts -> python3 -> expat
 -RUN microdnf remove -y gzip shadow-utils \
 -   && rpm --erase --nodeps cups-libs \
+-   && rpm --erase --nodeps expat \
+-   && rpm --erase --nodeps openssl-fips-provider openssl-fips-provider-so
 +RUN rpm --erase --nodeps gzip shadow-utils \
 +   && rpm --erase --nodeps cups-libs || true \
-    && rpm --erase --nodeps expat
++   && rpm --erase --nodeps expat
  
  VOLUME ${NEXUS_DATA}
+ 
