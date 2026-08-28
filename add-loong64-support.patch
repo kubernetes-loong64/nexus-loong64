@@ -1,17 +1,17 @@
 diff --git a/Dockerfile.java21 b/Dockerfile.java21
-index 588e1c6..f71b48a 100644
+index e81e47d..0649803 100644
 --- a/Dockerfile.java21
 +++ b/Dockerfile.java21
-@@ -12,7 +12,7 @@
- # See the License for the specific language governing permissions and
- # limitations under the License.
- 
--FROM redhat/ubi9-minimal
+@@ -15,7 +15,7 @@
+ # Pin the UBI 9 minimal base image by digest (instead of the floating :latest tag) for reproducible
+ # builds and a stable image identity. This digest is redhat/ubi9-minimal:latest as of 2026-07-31;
+ # update it deliberately when moving to a newer UBI build.
+-FROM redhat/ubi9-minimal@sha256:17fd831ced9434de0a984d60b3fbe61008308261ba98bbc348d6fbdef05fa7c0
 +FROM kubernetesloong64/jdk-loong64:21-anolis
  
  LABEL name="Nexus Repository Manager" \
        maintainer="Sonatype <support@sonatype.com>" \
-@@ -49,10 +49,10 @@ ENV NEXUS_HOME=${SONATYPE_DIR}/nexus \
+@@ -52,11 +52,10 @@ ENV NEXUS_HOME=${SONATYPE_DIR}/nexus \
      DOCKER_TYPE='rh-docker'
  
  # Install Java, tar, and unzip
@@ -19,6 +19,7 @@ index 588e1c6..f71b48a 100644
 -    && microdnf --setopt=install_weak_deps=0 --setopt=tsflags=nodocs install -y \
 -          java-21-openjdk-headless tar procps shadow-utils gzip unzip glibc-langpack-en \
 -    && microdnf clean all \
+-    && find /usr/lib/jvm -maxdepth 2 -name demo -type d -exec rm -rf {} + \
 +RUN dnf update -y \
 +    && dnf --setopt=install_weak_deps=0 --setopt=tsflags=nodocs install -y \
 +          tar procps shadow-utils gzip unzip glibc-langpack-en \
@@ -26,14 +27,17 @@ index 588e1c6..f71b48a 100644
      && groupadd --gid 200 -r nexus \
      && useradd --uid 200 -r nexus -g nexus -s /bin/false -d /opt/sonatype/nexus -c 'Nexus Repository Manager user'
  
-@@ -82,8 +82,8 @@ RUN echo "#!/bin/bash" >> ${SONATYPE_DIR}/start-nexus-repository-manager.sh \
+@@ -86,10 +85,9 @@ RUN echo "#!/bin/bash" >> ${SONATYPE_DIR}/start-nexus-repository-manager.sh \
  # Remove dependencies added for extracting Nexus
  # Remove CUPS, ignore the fact openjdk depends on it
  # Remove expat, nss-> crypto-policies-scripts -> python3 -> expat
 -RUN microdnf remove -y gzip shadow-utils \
 -   && rpm --erase --nodeps cups-libs \
+-   && rpm --erase --nodeps expat \
+-   && rpm --erase --nodeps openssl-fips-provider openssl-fips-provider-so
 +RUN rpm --erase --nodeps gzip shadow-utils \
 +   && rpm --erase --nodeps cups-libs || true \
-    && rpm --erase --nodeps expat
++   && rpm --erase --nodeps expat
  
  VOLUME ${NEXUS_DATA}
+ 
