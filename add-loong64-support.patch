@@ -27,14 +27,15 @@ index 1a7cd27..f341905 100644
      && groupadd --gid 200 -r nexus \
      && useradd --uid 200 -r nexus -g nexus -s /bin/false -d /opt/sonatype/nexus -c 'Nexus Repository Manager user'
  
-@@ -86,10 +85,9 @@ RUN echo "#!/bin/bash" >> ${SONATYPE_DIR}/start-nexus-repository-manager.sh \
+@@ -86,11 +85,9 @@ RUN echo "#!/bin/bash" >> ${SONATYPE_DIR}/start-nexus-repository-manager.sh \
  # Remove dependencies added for extracting Nexus
  # Remove CUPS, ignore the fact openjdk depends on it
  # Remove expat, nss-> crypto-policies-scripts -> python3 -> expat
 -RUN microdnf remove -y gzip shadow-utils \
 -   && rpm --erase --nodeps cups-libs \
 -   && rpm --erase --nodeps expat \
--   && rpm --erase --nodeps openssl-fips-provider openssl-fips-provider-so
+-   && rpm --erase --nodeps openssl-fips-provider openssl-fips-provider-so \
+-   && rpm --erase --nodeps avahi-libs dbus-libs
 +RUN rpm --erase --nodeps gzip shadow-utils \
 +   && rpm --erase --nodeps cups-libs || true \
 +   && rpm --erase --nodeps expat
